@@ -56,6 +56,7 @@ type TaskWithTags = Task & { tags?: any[] };
 
 const priorityColors = {
   [TaskPriority.LOW]: "bg-blue-100 text-blue-800",
+  [TaskPriority.NORMAL]: "bg-green-100 text-green-800",
   [TaskPriority.MEDIUM]: "bg-yellow-100 text-yellow-800",
   [TaskPriority.HIGH]: "bg-orange-100 text-orange-800",
   [TaskPriority.URGENT]: "bg-red-100 text-red-800",
@@ -208,6 +209,9 @@ export function TaskManager() {
       [TaskPriority.LOW]: (
         <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
       ),
+      [TaskPriority.NORMAL]: (
+        <span className="h-3.5 w-3.5 flex items-center justify-center" aria-hidden="true">-</span>
+      ),
       [TaskPriority.MEDIUM]: (
         <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
       ),
@@ -226,6 +230,7 @@ export function TaskManager() {
     const priority = task.priority || TaskPriority.MEDIUM;
     const priorityLabel = {
       [TaskPriority.LOW]: "Baixa",
+      [TaskPriority.NORMAL]: "Normal",
       [TaskPriority.MEDIUM]: "Média",
       [TaskPriority.HIGH]: "Alta",
       [TaskPriority.URGENT]: "Urgente",
@@ -571,6 +576,9 @@ export function TaskManager() {
                                 <div className="flex items-center gap-2">
                                   {priority === TaskPriority.LOW && (
                                     <ChevronDown className="h-3.5 w-3.5" />
+                                  )}
+                                  {priority === TaskPriority.NORMAL && (
+                                    <span className="h-3.5 w-3.5 flex items-center justify-center">-</span>
                                   )}
                                   {priority === TaskPriority.MEDIUM && (
                                     <ChevronUp className="h-3.5 w-3.5" />
