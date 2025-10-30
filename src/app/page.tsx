@@ -41,6 +41,8 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 type TaskWithTags = Task & { tags?: any[] };
@@ -65,16 +67,32 @@ export function TaskManager() {
   const [selectedTask, setSelectedTask] = useState<TaskWithTags | null>(null);
   const [mounted, setMounted] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [newTask, setNewTask] = useState<{
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingTask, setEditingTask] = useState<{
     title: string;
     description: string;
     priority: TaskPriority;
     status: TaskStatus;
+    dueDate?: Date;
   }>({
     title: "",
     description: "",
     priority: TaskPriority.MEDIUM,
     status: TaskStatus.TODO,
+  });
+
+  const [newTask, setNewTask] = useState<{
+    title: string;
+    description: string;
+    priority: TaskPriority;
+    status: TaskStatus;
+    dueDate?: Date;
+  }>({
+    title: "",
+    description: "",
+    priority: TaskPriority.MEDIUM,
+    status: TaskStatus.TODO,
+    dueDate: undefined,
   });
 
   const {
@@ -107,6 +125,7 @@ export function TaskManager() {
       description: newTask.description,
       status: newTask.status,
       priority: newTask.priority,
+      dueDate: newTask.dueDate,
     });
 
     setNewTask({
@@ -114,6 +133,7 @@ export function TaskManager() {
       description: "",
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.TODO,
+      dueDate: undefined,
     });
 
     setIsAddDialogOpen(false);
@@ -125,20 +145,62 @@ export function TaskManager() {
 
   const handleTaskClick = (task: TaskWithTags) => {
     setSelectedTask(task);
+    setEditingTask({
+      title: task.title,
+      description: task.description || "",
+      priority: task.priority || TaskPriority.MEDIUM,
+      status: task.status,
+      dueDate: task.dueDate,
+    });
+    setIsEditing(false);
     setIsDetailsOpen(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedTask) return;
+
+    await updateTask(selectedTask.id, {
+      title: editingTask.title,
+      description: editingTask.description,
+      priority: editingTask.priority,
+      status: editingTask.status,
+      dueDate: editingTask.dueDate,
+    });
+
+    // Update the selected task with the new values
+    setSelectedTask({
+      ...selectedTask,
+      ...editingTask,
+    });
+
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    if (!selectedTask) return;
+
+    setEditingTask({
+      title: selectedTask.title,
+      description: selectedTask.description || "",
+      priority: selectedTask.priority || TaskPriority.MEDIUM,
+      status: selectedTask.status,
+      dueDate: selectedTask.dueDate,
+    });
+
+    setIsEditing(false);
   };
 
   const renderTaskCard = (task: TaskWithTags) => (
     <Card
       key={task.id}
-      className="mb-4 cursor-pointer hover:shadow-md transition-shadow"
+      className="mb-3 cursor-pointer hover:shadow-md transition-shadow"
       onClick={() => handleTaskClick(task)}
     >
-      <CardHeader className="p-4 pb-2">
+      <CardHeader className="">
         <div className="flex justify-between items-start">
-          <h3 className="font-medium text-lg">{task.title}</h3>
+          <h3 className="font-medium text-base">{task.title}</h3>
           <span
-            className={`text-xs px-2 py-1 rounded-full ${
+            className={`text-xs px-2 py-0.5 rounded-full ${
               priorityColors[task.priority as TaskPriority] || ""
             }`}
           >
@@ -146,7 +208,7 @@ export function TaskManager() {
           </span>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0">
+      <CardContent className="">
         <p className="text-sm text-gray-600 line-clamp-2">
           {task.description || "No description"}
         </p>
@@ -162,7 +224,7 @@ export function TaskManager() {
   const renderStatusColumn = (status: TaskStatus, tasks: TaskWithTags[]) => {
     // Only render the count if we're on the client side
     const taskCount = mounted ? tasks.length : 0;
-    
+
     return (
       <div
         key={status}
@@ -265,6 +327,25 @@ export function TaskManager() {
                     </Select>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Due Date</label>
+                  <Input
+                    type="date"
+                    value={
+                      newTask.dueDate
+                        ? new Date(newTask.dueDate).toISOString().split("T")[0]
+                        : ""
+                    }
+                    onChange={(e) =>
+                      setNewTask({
+                        ...newTask,
+                        dueDate: e.target.value
+                          ? new Date(e.target.value)
+                          : undefined,
+                      })
+                    }
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button
@@ -292,55 +373,153 @@ export function TaskManager() {
           {selectedTask && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedTask.title}</DialogTitle>
-                <div className="flex items-center space-x-2 mt-1">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      priorityColors[selectedTask.priority as TaskPriority] ||
-                      ""
-                    }`}
-                  >
-                    {selectedTask.priority}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    {statusLabels[selectedTask.status]}
-                  </span>
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex-1">
+                      <DialogTitle className="mb-1">
+                        {isEditing ? (
+                          <Input
+                            value={editingTask.title}
+                            onChange={(e) =>
+                              setEditingTask({
+                                ...editingTask,
+                                title: e.target.value,
+                              })
+                            }
+                            className="text-lg"
+                          />
+                        ) : (
+                          selectedTask.title
+                        )}
+                      </DialogTitle>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-1">
+                      {isEditing ? (
+                        <Select
+                          value={editingTask.priority}
+                          onValueChange={(value) =>
+                            setEditingTask({
+                              ...editingTask,
+                              priority: value as TaskPriority,
+                            })
+                          }
+                        >
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Priority" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Object.values(TaskPriority).map((priority) => (
+                              <SelectItem key={priority} value={priority}>
+                                {priority.charAt(0).toUpperCase() +
+                                  priority.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full ${
+                            priorityColors[
+                              selectedTask.priority as TaskPriority
+                            ] || ""
+                          }`}
+                        >
+                          {selectedTask.priority}
+                        </span>
+                      )}
+                      {!isEditing && (
+                        <span className="text-sm text-gray-500">
+                          {statusLabels[selectedTask.status]}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div>
                   <h3 className="text-sm font-medium mb-1">Description</h3>
-                  <p className="text-sm text-gray-700">
-                    {selectedTask.description || "No description provided."}
-                  </p>
+                  {isEditing ? (
+                    <Textarea
+                      value={editingTask.description}
+                      onChange={(e) =>
+                        setEditingTask({
+                          ...editingTask,
+                          description: e.target.value,
+                        })
+                      }
+                      placeholder="Add a description..."
+                      className="min-h-[100px]"
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-700">
+                      {selectedTask.description || "No description provided."}
+                    </p>
+                  )}
                 </div>
-                {selectedTask.dueDate && (
-                  <div>
-                    <h3 className="text-sm font-medium mb-1">Due Date</h3>
+
+                <div>
+                  <h3 className="text-sm font-medium mb-1">Due Date</h3>
+                  {isEditing ? (
+                    <Input
+                      type="date"
+                      value={
+                        editingTask.dueDate
+                          ? new Date(editingTask.dueDate)
+                              .toISOString()
+                              .split("T")[0]
+                          : ""
+                      }
+                      onChange={(e) =>
+                        setEditingTask({
+                          ...editingTask,
+                          dueDate: e.target.value
+                            ? new Date(e.target.value)
+                            : undefined,
+                        })
+                      }
+                    />
+                  ) : selectedTask.dueDate ? (
                     <p className="text-sm text-gray-700">
                       {new Date(selectedTask.dueDate).toLocaleDateString()}
                     </p>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-gray-500">No due date set</p>
+                  )}
+                </div>
+
                 <div>
                   <h3 className="text-sm font-medium mb-2">Status</h3>
-                  <div className="flex space-x-2">
+                  <div className="flex flex-wrap gap-2">
                     {Object.entries(statusLabels).map(([status, label]) => (
                       <Button
                         key={status}
                         variant={
-                          selectedTask.status === status ? "default" : "outline"
+                          (isEditing
+                            ? editingTask.status
+                            : selectedTask.status) === status
+                            ? "default"
+                            : "outline"
                         }
                         size="sm"
                         onClick={() => {
-                          handleStatusChange(
-                            selectedTask.id,
-                            status as TaskStatus
-                          );
-                          setIsDetailsOpen(false);
+                          if (isEditing) {
+                            setEditingTask({
+                              ...editingTask,
+                              status: status as TaskStatus,
+                            });
+                          } else {
+                            handleStatusChange(
+                              selectedTask.id,
+                              status as TaskStatus
+                            );
+                            setIsDetailsOpen(false);
+                          }
                         }}
                       >
-                        {selectedTask.status === status && (
+                        {(isEditing
+                          ? editingTask.status
+                          : selectedTask.status) === status && (
                           <Check className="mr-2 h-4 w-4" />
                         )}
                         {label}
@@ -349,16 +528,46 @@ export function TaskManager() {
                   </div>
                 </div>
               </div>
-              <DialogFooter>
-                <Button
-                  variant="destructive"
-                  onClick={async () => {
-                    await deleteTask(selectedTask.id);
-                    setIsDetailsOpen(false);
-                  }}
-                >
-                  Delete Task
-                </Button>
+              <DialogFooter className="sm:justify-between">
+                {isEditing ? (
+                  <div className="flex gap-2 w-full justify-between">
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={handleCancelEdit}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleSaveEdit}
+                        disabled={!editingTask.title.trim()}
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Edit className="mr-2 h-4 w-4" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      onClick={async () => {
+                        if (
+                          confirm("Are you sure you want to delete this task?")
+                        ) {
+                          await deleteTask(selectedTask.id);
+                          setIsDetailsOpen(false);
+                        }
+                      }}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </Button>
+                  </div>
+                )}
               </DialogFooter>
             </>
           )}
