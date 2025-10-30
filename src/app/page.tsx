@@ -43,6 +43,13 @@ import {
   ChevronUp,
   Edit,
   Trash2,
+  Text,
+  FileText,
+  AlertCircle,
+  ListTodo,
+  Calendar,
+  RefreshCw,
+  X as XIcon,
 } from "lucide-react";
 
 type TaskWithTags = Task & { tags?: any[] };
@@ -55,10 +62,10 @@ const priorityColors = {
 };
 
 const statusLabels = {
-  [TaskStatus.TODO]: "To Do",
-  [TaskStatus.IN_PROGRESS]: "In Progress",
-  [TaskStatus.COMPLETED]: "Completed",
-  [TaskStatus.CANCELLED]: "Cancelled",
+  [TaskStatus.TODO]: "A Fazer",
+  [TaskStatus.IN_PROGRESS]: "Em Andamento",
+  [TaskStatus.COMPLETED]: "Concluído",
+  [TaskStatus.CANCELLED]: "Cancelado",
 };
 
 // Export TaskManager as both named and default export
@@ -118,7 +125,7 @@ export function TaskManager() {
   const completedTasks = getTasksByStatus(TaskStatus.COMPLETED);
 
   const handleAddTask = async () => {
-    if (!newTask.title.trim()) return;
+    if (!newTask.title.trim()) return; // Verifica se o título não está vazio
 
     await addTask({
       title: newTask.title,
@@ -190,36 +197,70 @@ export function TaskManager() {
     setIsEditing(false);
   };
 
-  const renderTaskCard = (task: TaskWithTags) => (
-    <Card
-      key={task.id}
-      className="mb-3 cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => handleTaskClick(task)}
-    >
-      <CardHeader className="">
-        <div className="flex justify-between items-start">
-          <h3 className="font-medium text-base">{task.title}</h3>
-          <span
-            className={`text-xs px-2 py-0.5 rounded-full ${
-              priorityColors[task.priority as TaskPriority] || ""
-            }`}
-          >
-            {task.priority}
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className="">
-        <p className="text-sm text-gray-600 line-clamp-2">
-          {task.description || "No description"}
-        </p>
-        {task.dueDate && (
-          <div className="mt-2 text-xs text-gray-500">
-            Due: {new Date(task.dueDate).toLocaleDateString()}
+  const renderTaskCard = (task: TaskWithTags) => {
+    const priorityIcons = {
+      [TaskPriority.LOW]: <ChevronDown className="h-3.5 w-3.5" />,
+      [TaskPriority.MEDIUM]: <ChevronUp className="h-3.5 w-3.5" />,
+      [TaskPriority.HIGH]: <AlertCircle className="h-3.5 w-3.5" />,
+      [TaskPriority.URGENT]: (
+        <AlertCircle className="h-3.5 w-3.5" fill="currentColor" />
+      ),
+    };
+
+    const priority = task.priority || TaskPriority.MEDIUM;
+
+    return (
+      <Card
+        key={task.id}
+        className="mb-3 cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-transparent hover:border-l-blue-500"
+        onClick={() => handleTaskClick(task)}
+      >
+        <CardHeader className="py-3 px-4">
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex-1 flex items-start gap-2">
+              <div className="mt-0.5">
+                <ListTodo className="h-4 w-4 text-gray-400" />
+              </div>
+              <h3 className="font-medium text-base">{task.title}</h3>
+            </div>
+            <div className="flex items-center gap-1">
+              <span
+                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                  priorityColors[priority] || ""
+                }`}
+              >
+                {priorityIcons[priority]}
+                {priority.charAt(0).toUpperCase() + priority.slice(1)}
+              </span>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+        </CardHeader>
+        <CardContent className="pt-0 px-4 pb-3">
+          <div className="flex items-start gap-2 text-sm text-gray-600">
+            {task.description ? (
+              <>
+                <FileText className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                <p className="line-clamp-2">{task.description}</p>
+              </>
+            ) : (
+              <p className="text-gray-400 italic flex items-center gap-1">
+                <FileText className="h-3.5 w-3.5" />
+                Sem descrição
+              </p>
+            )}
+          </div>
+          {task.dueDate && (
+            <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>
+                Vence em {new Date(task.dueDate).toLocaleDateString("pt-BR")}
+              </span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   const renderStatusColumn = (status: TaskStatus, tasks: TaskWithTags[]) => {
     // Only render the count if we're on the client side
@@ -245,26 +286,31 @@ export function TaskManager() {
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Task Manager</h1>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Gerenciador de Tarefas
+          </h1>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
-                Add Task
+                Adicionar Tarefa
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Task</DialogTitle>
+                <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
                 <DialogDescription>
-                  Create a new task and assign it to a status.
+                  Preencha os detalhes abaixo para criar uma nova tarefa.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Title</label>
+                  <div className="flex items-center space-x-2">
+                    <Text className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-medium">Título</label>
+                  </div>
                   <Input
-                    placeholder="Task title"
+                    placeholder="Título da tarefa"
                     value={newTask.title}
                     onChange={(e) =>
                       setNewTask({ ...newTask, title: e.target.value })
@@ -272,9 +318,12 @@ export function TaskManager() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-medium">Descrição</label>
+                  </div>
                   <Textarea
-                    placeholder="Task description"
+                    placeholder="Descrição da tarefa"
                     value={newTask.description}
                     onChange={(e) =>
                       setNewTask({ ...newTask, description: e.target.value })
@@ -283,7 +332,10 @@ export function TaskManager() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Priority</label>
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-medium">Prioridade</label>
+                    </div>
                     <Select
                       value={newTask.priority}
                       onValueChange={(value) =>
@@ -294,7 +346,7 @@ export function TaskManager() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select priority" />
+                        <SelectValue placeholder="Selecione a prioridade" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.values(TaskPriority).map((priority) => (
@@ -307,7 +359,10 @@ export function TaskManager() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Status</label>
+                    <div className="flex items-center space-x-2">
+                      <ListTodo className="h-4 w-4 text-muted-foreground" />
+                      <label className="text-sm font-medium">Status</label>
+                    </div>
                     <Select
                       value={newTask.status}
                       onValueChange={(value) =>
@@ -315,7 +370,7 @@ export function TaskManager() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select status" />
+                        <SelectValue placeholder="Selecione o status" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(statusLabels).map(([value, label]) => (
@@ -328,7 +383,12 @@ export function TaskManager() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Due Date</label>
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <label className="text-sm font-medium">
+                      Data de Vencimento
+                    </label>
+                  </div>
                   <Input
                     type="date"
                     value={
@@ -347,14 +407,23 @@ export function TaskManager() {
                   />
                 </div>
               </div>
-              <DialogFooter>
+              <DialogFooter className="justify-end gap-2">
                 <Button
                   variant="outline"
                   onClick={() => setIsAddDialogOpen(false)}
+                  className="gap-2"
                 >
-                  Cancel
+                  <XIcon className="h-4 w-4" />
+                  <span>Cancelar</span>
                 </Button>
-                <Button onClick={handleAddTask}>Add Task</Button>
+                <Button
+                  onClick={handleAddTask}
+                  className="gap-2"
+                  disabled={!newTask.title.trim()}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Adicionar Tarefa</span>
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -375,25 +444,32 @@ export function TaskManager() {
               <DialogHeader>
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex-1">
-                    <div className="flex-1">
-                      <DialogTitle className="mb-1">
-                        {isEditing ? (
-                          <Input
-                            value={editingTask.title}
-                            onChange={(e) =>
-                              setEditingTask({
-                                ...editingTask,
-                                title: e.target.value,
-                              })
-                            }
-                            className="text-lg"
-                          />
-                        ) : (
-                          selectedTask.title
-                        )}
-                      </DialogTitle>
+                    <div className="flex items-start gap-3">
+                      <div className="mt-1">
+                        <ListTodo className="h-5 w-5 text-gray-500" />
+                      </div>
+                      <div className="flex-1">
+                        <DialogTitle className="mb-1">
+                          {isEditing ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingTask.title}
+                                onChange={(e) =>
+                                  setEditingTask({
+                                    ...editingTask,
+                                    title: e.target.value,
+                                  })
+                                }
+                                className="text-lg flex-1"
+                              />
+                            </div>
+                          ) : (
+                            selectedTask.title
+                          )}
+                        </DialogTitle>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 mt-1">
+                    <div className="flex items-center gap-3 mt-2 pl-8">
                       {isEditing ? (
                         <Select
                           value={editingTask.priority}
@@ -404,31 +480,83 @@ export function TaskManager() {
                             })
                           }
                         >
-                          <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Priority" />
+                          <SelectTrigger className="w-[140px]">
+                            <SelectValue placeholder="Prioridade" />
                           </SelectTrigger>
                           <SelectContent>
                             {Object.values(TaskPriority).map((priority) => (
                               <SelectItem key={priority} value={priority}>
-                                {priority.charAt(0).toUpperCase() +
-                                  priority.slice(1)}
+                                <div className="flex items-center gap-2">
+                                  {priority === TaskPriority.LOW && (
+                                    <ChevronDown className="h-3.5 w-3.5" />
+                                  )}
+                                  {priority === TaskPriority.MEDIUM && (
+                                    <ChevronUp className="h-3.5 w-3.5" />
+                                  )}
+                                  {[
+                                    TaskPriority.HIGH,
+                                    TaskPriority.URGENT,
+                                  ].includes(priority) && (
+                                    <AlertCircle
+                                      className={`h-3.5 w-3.5 ${
+                                        priority === TaskPriority.URGENT
+                                          ? "fill-current"
+                                          : ""
+                                      }`}
+                                    />
+                                  )}
+                                  <span>
+                                    {priority.charAt(0).toUpperCase() +
+                                      priority.slice(1)}
+                                  </span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       ) : (
                         <span
-                          className={`text-xs px-2 py-1 rounded-full ${
+                          className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full ${
                             priorityColors[
-                              selectedTask.priority as TaskPriority
+                              (selectedTask.priority ||
+                                TaskPriority.MEDIUM) as TaskPriority
                             ] || ""
                           }`}
                         >
-                          {selectedTask.priority}
+                          {(selectedTask.priority || TaskPriority.MEDIUM) ===
+                            TaskPriority.LOW && (
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          )}
+                          {(selectedTask.priority || TaskPriority.MEDIUM) ===
+                            TaskPriority.MEDIUM && (
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          )}
+                          {[TaskPriority.HIGH, TaskPriority.URGENT].includes(
+                            (selectedTask.priority ||
+                              TaskPriority.MEDIUM) as TaskPriority
+                          ) && (
+                            <AlertCircle
+                              className={`h-3.5 w-3.5 ${
+                                (selectedTask.priority ||
+                                  TaskPriority.MEDIUM) === TaskPriority.URGENT
+                                  ? "fill-current"
+                                  : ""
+                              }`}
+                            />
+                          )}
+                          <span>
+                            {(selectedTask.priority || TaskPriority.MEDIUM)
+                              .charAt(0)
+                              .toUpperCase() +
+                              (
+                                selectedTask.priority || TaskPriority.MEDIUM
+                              ).slice(1)}
+                          </span>
                         </span>
                       )}
                       {!isEditing && (
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-500 flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
                           {statusLabels[selectedTask.status]}
                         </span>
                       )}
@@ -436,9 +564,12 @@ export function TaskManager() {
                   </div>
                 </div>
               </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Description</h3>
+              <div className="space-y-5 py-2 px-2">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <h3 className="text-sm font-medium">Descrição</h3>
+                  </div>
                   {isEditing ? (
                     <Textarea
                       value={editingTask.description}
@@ -448,18 +579,25 @@ export function TaskManager() {
                           description: e.target.value,
                         })
                       }
-                      placeholder="Add a description..."
+                      placeholder="Adicione uma descrição..."
                       className="min-h-[100px]"
                     />
                   ) : (
-                    <p className="text-sm text-gray-700">
-                      {selectedTask.description || "No description provided."}
+                    <p className="text-sm text-gray-700 pl-6">
+                      {selectedTask.description || (
+                        <span className="text-gray-400 italic">
+                          Nenhuma descrição fornecida
+                        </span>
+                      )}
                     </p>
                   )}
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Due Date</h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <h3 className="text-sm font-medium">Data de Vencimento</h3>
+                  </div>
                   {isEditing ? (
                     <Input
                       type="date"
@@ -478,19 +616,32 @@ export function TaskManager() {
                             : undefined,
                         })
                       }
+                      className="max-w-[200px]"
                     />
                   ) : selectedTask.dueDate ? (
-                    <p className="text-sm text-gray-700">
-                      {new Date(selectedTask.dueDate).toLocaleDateString()}
+                    <p className="text-sm text-gray-700 pl-6">
+                      {new Date(selectedTask.dueDate).toLocaleDateString(
+                        "pt-BR",
+                        {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-500">No due date set</p>
+                    <p className="text-sm text-gray-400 italic pl-6">
+                      Nenhuma data definida
+                    </p>
                   )}
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Status</h3>
-                  <div className="flex flex-wrap gap-2">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ListTodo className="h-4 w-4 text-gray-500" />
+                    <h3 className="text-sm font-medium">Status</h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pl-6">
                     {Object.entries(statusLabels).map(([status, label]) => (
                       <Button
                         key={status}
@@ -502,6 +653,7 @@ export function TaskManager() {
                             : "outline"
                         }
                         size="sm"
+                        className="gap-2"
                         onClick={() => {
                           if (isEditing) {
                             setEditingTask({
@@ -520,7 +672,7 @@ export function TaskManager() {
                         {(isEditing
                           ? editingTask.status
                           : selectedTask.status) === status && (
-                          <Check className="mr-2 h-4 w-4" />
+                          <Check className="h-3.5 w-3.5" />
                         )}
                         {label}
                       </Button>
@@ -528,44 +680,55 @@ export function TaskManager() {
                   </div>
                 </div>
               </div>
-              <DialogFooter className="sm:justify-between">
+              <DialogFooter className="sm:justify-between pt-2">
                 {isEditing ? (
-                  <div className="flex gap-2 w-full justify-between">
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={handleCancelEdit}>
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSaveEdit}
-                        disabled={!editingTask.title.trim()}
-                      >
-                        Save Changes
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 w-full justify-end">
                     <Button
                       variant="outline"
-                      onClick={() => setIsEditing(true)}
+                      onClick={handleCancelEdit}
+                      className="gap-2"
                     >
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit
+                      <XIcon className="h-4 w-4" />
+                      <span>Cancelar</span>
                     </Button>
                     <Button
-                      variant="destructive"
-                      onClick={async () => {
-                        if (
-                          confirm("Are you sure you want to delete this task?")
-                        ) {
-                          await deleteTask(selectedTask.id);
-                          setIsDetailsOpen(false);
-                        }
-                      }}
+                      onClick={handleSaveEdit}
+                      disabled={!editingTask.title.trim()}
+                      className="gap-2"
                     >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
+                      <Check className="h-4 w-4" />
+                      <span>Salvar alterações</span>
                     </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 w-full justify-end">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setIsEditing(true)}
+                        className="gap-2"
+                      >
+                        <Edit className="h-4 w-4" />
+                        <span>Editar</span>
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={async () => {
+                          if (
+                            window.confirm(
+                              "Tem certeza que deseja excluir esta tarefa?"
+                            )
+                          ) {
+                            await deleteTask(selectedTask.id);
+                            setIsDetailsOpen(false);
+                          }
+                        }}
+                        className="gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        <span>Excluir</span>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </DialogFooter>
