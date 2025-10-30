@@ -150,7 +150,9 @@ export function TaskManager() {
     await updateTask(taskId, { status: newStatus });
   };
 
-  const handleTaskClick = (task: TaskWithTags) => {
+  const handleTaskClick = (task: TaskWithTags | null) => {
+    if (!task) return;
+    
     setSelectedTask(task);
     setEditingTask({
       title: task.title,
@@ -166,18 +168,20 @@ export function TaskManager() {
   const handleSaveEdit = async () => {
     if (!selectedTask) return;
 
-    await updateTask(selectedTask.id, {
+    const updatedTask = {
       title: editingTask.title,
       description: editingTask.description,
       priority: editingTask.priority,
       status: editingTask.status,
-      dueDate: editingTask.dueDate,
-    });
+      dueDate: editingTask.dueDate ? new Date(editingTask.dueDate) : undefined,
+    };
+
+    await updateTask(selectedTask.id, updatedTask);
 
     // Update the selected task with the new values
     setSelectedTask({
       ...selectedTask,
-      ...editingTask,
+      ...updatedTask,
     });
 
     setIsEditing(false);
@@ -191,7 +195,7 @@ export function TaskManager() {
       description: selectedTask.description || "",
       priority: selectedTask.priority || TaskPriority.MEDIUM,
       status: selectedTask.status,
-      dueDate: selectedTask.dueDate,
+      dueDate: selectedTask.dueDate ? new Date(selectedTask.dueDate) : undefined,
     });
 
     setIsEditing(false);
@@ -199,21 +203,36 @@ export function TaskManager() {
 
   const renderTaskCard = (task: TaskWithTags) => {
     const priorityIcons = {
-      [TaskPriority.LOW]: <ChevronDown className="h-3.5 w-3.5" />,
-      [TaskPriority.MEDIUM]: <ChevronUp className="h-3.5 w-3.5" />,
-      [TaskPriority.HIGH]: <AlertCircle className="h-3.5 w-3.5" />,
+      [TaskPriority.LOW]: <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />,
+      [TaskPriority.MEDIUM]: <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />,
+      [TaskPriority.HIGH]: <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />,
       [TaskPriority.URGENT]: (
-        <AlertCircle className="h-3.5 w-3.5" fill="currentColor" />
+        <AlertCircle className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />
       ),
     };
 
     const priority = task.priority || TaskPriority.MEDIUM;
+    const priorityLabel = {
+      [TaskPriority.LOW]: 'Baixa',
+      [TaskPriority.MEDIUM]: 'Média',
+      [TaskPriority.HIGH]: 'Alta',
+      [TaskPriority.URGENT]: 'Urgente'
+    }[priority];
 
     return (
       <Card
         key={task.id}
-        className="mb-3 cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-transparent hover:border-l-blue-500"
+        role="button"
+        tabIndex={0}
+        aria-label={`Tarefa: ${task.title}, Prioridade: ${priorityLabel}${task.dueDate ? `, Vence em: ${new Date(task.dueDate).toLocaleDateString('pt-BR')}` : ''}`}
+        className="mb-3 cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-transparent hover:border-l-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         onClick={() => handleTaskClick(task)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleTaskClick(task);
+          }
+        }}
       >
         <CardHeader className="py-3 px-4">
           <div className="flex justify-between items-start gap-2">
@@ -265,64 +284,77 @@ export function TaskManager() {
   const renderStatusColumn = (status: TaskStatus, tasks: TaskWithTags[]) => {
     // Only render the count if we're on the client side
     const taskCount = mounted ? tasks.length : 0;
+    const statusId = `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
 
     return (
-      <div
+      <section
         key={status}
+        aria-labelledby={statusId}
         className="flex-1 min-w-[300px] p-4 bg-gray-50 rounded-lg"
       >
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-semibold text-lg">{statusLabels[status]}</h2>
-          <span className="text-sm text-gray-500">{taskCount}</span>
+          <h2 id={statusId} className="font-semibold text-lg">
+            {statusLabels[status]}
+          </h2>
+          <span className="text-sm text-gray-500" aria-live="polite">
+            {taskCount} {taskCount === 1 ? 'tarefa' : 'tarefas'}
+          </span>
         </div>
-        <div className="space-y-2">
+        <div 
+          role="region" 
+          aria-label={`Lista de tarefas ${statusLabels[status].toLowerCase()}`}
+          className="space-y-2"
+        >
           {mounted ? tasks.map(renderTaskCard) : null}
         </div>
-      </div>
+      </section>
     );
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+        <header className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-800" id="main-heading">
             Gerenciador de Tarefas
           </h1>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
+              <Button aria-label="Adicionar nova tarefa">
+                <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
                 Adicionar Tarefa
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Adicionar Nova Tarefa</DialogTitle>
-                <DialogDescription>
+                <DialogTitle id="add-task-dialog-title">Adicionar Nova Tarefa</DialogTitle>
+                <DialogDescription id="add-task-dialog-description">
                   Preencha os detalhes abaixo para criar uma nova tarefa.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4">
+              <div className="space-y-4 py-4" role="form" aria-labelledby="add-task-dialog-title" aria-describedby="add-task-dialog-description">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Text className="h-4 w-4 text-muted-foreground" />
-                    <label className="text-sm font-medium">Título</label>
+                    <label htmlFor="task-title" className="text-sm font-medium">Título</label>
                   </div>
                   <Input
+                    id="task-title"
                     placeholder="Título da tarefa"
                     value={newTask.title}
                     onChange={(e) =>
                       setNewTask({ ...newTask, title: e.target.value })
                     }
+                    aria-required="true"
                   />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    <label className="text-sm font-medium">Descrição</label>
+                    <label htmlFor="task-description" className="text-sm font-medium">Descrição</label>
                   </div>
                   <Textarea
+                    id="task-description"
                     placeholder="Descrição da tarefa"
                     value={newTask.description}
                     onChange={(e) =>
@@ -334,7 +366,7 @@ export function TaskManager() {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                      <label className="text-sm font-medium">Prioridade</label>
+                      <label id="priority-label" className="text-sm font-medium">Prioridade</label>
                     </div>
                     <Select
                       value={newTask.priority}
@@ -344,6 +376,7 @@ export function TaskManager() {
                           priority: value as TaskPriority,
                         })
                       }
+                      aria-labelledby="priority-label"
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a prioridade" />
@@ -361,13 +394,14 @@ export function TaskManager() {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <ListTodo className="h-4 w-4 text-muted-foreground" />
-                      <label className="text-sm font-medium">Status</label>
+                      <label id="status-label" className="text-sm font-medium">Status</label>
                     </div>
                     <Select
                       value={newTask.status}
                       onValueChange={(value) =>
                         setNewTask({ ...newTask, status: value as TaskStatus })
                       }
+                      aria-labelledby="status-label"
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o status" />
@@ -385,11 +419,12 @@ export function TaskManager() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <label className="text-sm font-medium">
+                    <label htmlFor="due-date" className="text-sm font-medium">
                       Data de Vencimento
                     </label>
                   </div>
                   <Input
+                    id="due-date"
                     type="date"
                     value={
                       newTask.dueDate
@@ -412,28 +447,32 @@ export function TaskManager() {
                   variant="outline"
                   onClick={() => setIsAddDialogOpen(false)}
                   className="gap-2"
+                  aria-label="Cancelar e fechar diálogo"
                 >
-                  <XIcon className="h-4 w-4" />
+                  <XIcon className="h-4 w-4" aria-hidden="true" />
                   <span>Cancelar</span>
                 </Button>
                 <Button
                   onClick={handleAddTask}
                   className="gap-2"
                   disabled={!newTask.title.trim()}
+                  aria-disabled={!newTask.title.trim()}
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                   <span>Adicionar Tarefa</span>
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
-
-        <div className="flex flex-col md:flex-row gap-6">
-          {renderStatusColumn(TaskStatus.TODO, todoTasks)}
-          {renderStatusColumn(TaskStatus.IN_PROGRESS, inProgressTasks)}
-          {renderStatusColumn(TaskStatus.COMPLETED, completedTasks)}
-        </div>
+        </header>
+        
+        <main>
+          <div className="flex flex-col md:flex-row gap-6" role="main" aria-labelledby="main-heading">
+            {renderStatusColumn(TaskStatus.TODO, todoTasks)}
+            {renderStatusColumn(TaskStatus.IN_PROGRESS, inProgressTasks)}
+            {renderStatusColumn(TaskStatus.COMPLETED, completedTasks)}
+          </div>
+        </main>
       </div>
 
       {/* Task Details Dialog */}
