@@ -4,7 +4,7 @@ Este projeto visa criar um dashboard de tarefas com funcionalidades básicas de 
 
 Neste README podem ser encontrados informações sobre a instalação e execução do projeto, incluindo o que foi feito e o que ainda precisa ser feito.
 
-Você pode ver o dashboard em ação no link: [](dashboard-tarefas-test.vercel.app)
+Você pode ver o dashboard em ação no link: https://dashboard-tarefas-test.vercel.app
 
 ## Instalação
 
