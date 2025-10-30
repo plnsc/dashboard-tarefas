@@ -4,13 +4,7 @@ import { useState, useEffect } from "react";
 import { useStore } from "../lib/store";
 import { TaskStatus, TaskPriority, type Task } from "../lib/interfaces";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import {
@@ -30,17 +24,10 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "../components/ui/tabs";
-import {
   Plus,
-  MoreVertical,
   Check,
-  ChevronDown,
-  ChevronUp,
+  CircleChevronDown,
+  CircleChevronUp,
   Edit,
   Trash2,
   Text,
@@ -48,7 +35,7 @@ import {
   AlertCircle,
   ListTodo,
   Calendar,
-  RefreshCw,
+  Circle,
   X as XIcon,
 } from "lucide-react";
 
@@ -63,13 +50,12 @@ const priorityColors = {
 };
 
 const statusLabels = {
-  [TaskStatus.TODO]: "A Fazer",
-  [TaskStatus.IN_PROGRESS]: "Em Andamento",
-  [TaskStatus.COMPLETED]: "Concluído",
-  [TaskStatus.CANCELLED]: "Cancelado",
+  [TaskStatus.TODO]: "To-Do",
+  [TaskStatus.IN_PROGRESS]: "In Progress",
+  [TaskStatus.COMPLETED]: "Completed",
+  [TaskStatus.CANCELLED]: "Cancelled",
 };
 
-// Export TaskManager as both named and default export
 export function TaskManager() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<TaskWithTags | null>(null);
@@ -85,7 +71,7 @@ export function TaskManager() {
   }>({
     title: "",
     description: "",
-    priority: TaskPriority.MEDIUM,
+    priority: TaskPriority.NORMAL,
     status: TaskStatus.TODO,
   });
 
@@ -98,7 +84,7 @@ export function TaskManager() {
   }>({
     title: "",
     description: "",
-    priority: TaskPriority.MEDIUM,
+    priority: TaskPriority.NORMAL,
     status: TaskStatus.TODO,
     dueDate: undefined,
   });
@@ -207,13 +193,13 @@ export function TaskManager() {
   const renderTaskCard = (task: TaskWithTags) => {
     const priorityIcons = {
       [TaskPriority.LOW]: (
-        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+        <CircleChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
       ),
       [TaskPriority.NORMAL]: (
-        <span className="h-3.5 w-3.5 flex items-center justify-center" aria-hidden="true">-</span>
+        <Circle className="h-3.5 w-3.5" aria-hidden="true" />
       ),
       [TaskPriority.MEDIUM]: (
-        <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+        <CircleChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
       ),
       [TaskPriority.HIGH]: (
         <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
@@ -229,11 +215,11 @@ export function TaskManager() {
 
     const priority = task.priority || TaskPriority.MEDIUM;
     const priorityLabel = {
-      [TaskPriority.LOW]: "Baixa",
+      [TaskPriority.LOW]: "Low",
       [TaskPriority.NORMAL]: "Normal",
-      [TaskPriority.MEDIUM]: "Média",
-      [TaskPriority.HIGH]: "Alta",
-      [TaskPriority.URGENT]: "Urgente",
+      [TaskPriority.MEDIUM]: "Medium",
+      [TaskPriority.HIGH]: "High",
+      [TaskPriority.URGENT]: "Urgent",
     }[priority];
 
     return (
@@ -241,9 +227,9 @@ export function TaskManager() {
         key={task.id}
         role="button"
         tabIndex={0}
-        aria-label={`Tarefa: ${task.title}, Prioridade: ${priorityLabel}${
+        aria-label={`Task: ${task.title}, Priority: ${priorityLabel}${
           task.dueDate
-            ? `, Vence em: ${new Date(task.dueDate).toLocaleDateString(
+            ? `, Due Date: ${new Date(task.dueDate).toLocaleDateString(
                 "pt-BR"
               )}`
             : ""
@@ -257,10 +243,10 @@ export function TaskManager() {
           }
         }}
       >
-        <CardHeader className="py-3 px-4">
+        <CardHeader className="px-4">
           <div className="flex justify-between items-start gap-2">
-            <div className="flex-1 flex items-start gap-2">
-              <div className="mt-0.5">
+            <div className="flex-1 flex items-center gap-2">
+              <div>
                 <ListTodo className="h-4 w-4 text-gray-400" />
               </div>
               <h3 className="font-medium text-base">{task.title}</h3>
@@ -277,7 +263,7 @@ export function TaskManager() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-0 px-4 pb-3">
+        <CardContent className="px-4">
           <div className="flex items-start gap-2 text-sm text-gray-600">
             {task.description ? (
               <>
@@ -287,7 +273,7 @@ export function TaskManager() {
             ) : (
               <p className="text-gray-400 italic flex items-center gap-1">
                 <FileText className="h-3.5 w-3.5" />
-                Sem descrição
+                No description
               </p>
             )}
           </div>
@@ -295,7 +281,7 @@ export function TaskManager() {
             <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
               <span>
-                Vence em {new Date(task.dueDate).toLocaleDateString("pt-BR")}
+                Due date {new Date(task.dueDate).toLocaleDateString("pt-BR")}
               </span>
             </div>
           )}
@@ -320,12 +306,12 @@ export function TaskManager() {
             {statusLabels[status]}
           </h2>
           <span className="text-sm text-gray-500" aria-live="polite">
-            {taskCount} {taskCount === 1 ? "tarefa" : "tarefas"}
+            {taskCount} {taskCount === 1 ? "task" : "tasks"}
           </span>
         </div>
         <div
           role="region"
-          aria-label={`Lista de tarefas ${statusLabels[status].toLowerCase()}`}
+          aria-label={`Task list ${statusLabels[status].toLowerCase()}`}
           className="space-y-2"
         >
           {mounted ? tasks.map(renderTaskCard) : null}
@@ -339,22 +325,22 @@ export function TaskManager() {
       <div className="max-w-7xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-800" id="main-heading">
-            Gerenciador de Tarefas
+            Tasks
           </h1>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button aria-label="Adicionar nova tarefa">
+              <Button aria-label="Add new task">
                 <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-                Adicionar Tarefa
+                Add Task
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle id="add-task-dialog-title">
-                  Adicionar Nova Tarefa
+                  Add New Task
                 </DialogTitle>
                 <DialogDescription id="add-task-dialog-description">
-                  Preencha os detalhes abaixo para criar uma nova tarefa.
+                  Fill in the details below to create a new task.
                 </DialogDescription>
               </DialogHeader>
               <div
@@ -367,12 +353,12 @@ export function TaskManager() {
                   <div className="flex items-center space-x-2">
                     <Text className="h-4 w-4 text-muted-foreground" />
                     <label htmlFor="task-title" className="text-sm font-medium">
-                      Título
+                      Title
                     </label>
                   </div>
                   <Input
                     id="task-title"
-                    placeholder="Título da tarefa"
+                    placeholder="Task title"
                     value={newTask.title}
                     onChange={(e) =>
                       setNewTask({ ...newTask, title: e.target.value })
@@ -387,12 +373,12 @@ export function TaskManager() {
                       htmlFor="task-description"
                       className="text-sm font-medium"
                     >
-                      Descrição
+                      Description
                     </label>
                   </div>
                   <Textarea
                     id="task-description"
-                    placeholder="Descrição da tarefa"
+                    placeholder="Task description"
                     value={newTask.description}
                     onChange={(e) =>
                       setNewTask({ ...newTask, description: e.target.value })
@@ -407,7 +393,7 @@ export function TaskManager() {
                         id="priority-label"
                         className="text-sm font-medium"
                       >
-                        Prioridade
+                        Priority
                       </label>
                     </div>
                     <Select
@@ -421,7 +407,7 @@ export function TaskManager() {
                       aria-labelledby="priority-label"
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione a prioridade" />
+                        <SelectValue placeholder="Priority" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.values(TaskPriority).map((priority) => (
@@ -448,7 +434,7 @@ export function TaskManager() {
                       aria-labelledby="status-label"
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o status" />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(statusLabels).map(([value, label]) => (
@@ -464,7 +450,7 @@ export function TaskManager() {
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <label htmlFor="due-date" className="text-sm font-medium">
-                      Data de Vencimento
+                      Due Date
                     </label>
                   </div>
                   <Input
@@ -491,10 +477,10 @@ export function TaskManager() {
                   variant="outline"
                   onClick={() => setIsAddDialogOpen(false)}
                   className="gap-2"
-                  aria-label="Cancelar e fechar diálogo"
+                  aria-label="Cancel and close dialog"
                 >
                   <XIcon className="h-4 w-4" aria-hidden="true" />
-                  <span>Cancelar</span>
+                  <span>Cancel</span>
                 </Button>
                 <Button
                   onClick={handleAddTask}
@@ -503,7 +489,7 @@ export function TaskManager() {
                   aria-disabled={!newTask.title.trim()}
                 >
                   <Plus className="h-4 w-4" aria-hidden="true" />
-                  <span>Adicionar Tarefa</span>
+                  <span>Add Task</span>
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -568,20 +554,20 @@ export function TaskManager() {
                           }
                         >
                           <SelectTrigger className="w-[140px]">
-                            <SelectValue placeholder="Prioridade" />
+                            <SelectValue placeholder="Priority" />
                           </SelectTrigger>
                           <SelectContent>
                             {Object.values(TaskPriority).map((priority) => (
                               <SelectItem key={priority} value={priority}>
                                 <div className="flex items-center gap-2">
                                   {priority === TaskPriority.LOW && (
-                                    <ChevronDown className="h-3.5 w-3.5" />
+                                    <CircleChevronDown className="h-3.5 w-3.5" />
                                   )}
                                   {priority === TaskPriority.NORMAL && (
-                                    <span className="h-3.5 w-3.5 flex items-center justify-center">-</span>
+                                    <Circle className="h-3.5 w-3.5 flex items-center justify-center" />
                                   )}
                                   {priority === TaskPriority.MEDIUM && (
-                                    <ChevronUp className="h-3.5 w-3.5" />
+                                    <CircleChevronUp className="h-3.5 w-3.5" />
                                   )}
                                   {[
                                     TaskPriority.HIGH,
@@ -615,11 +601,11 @@ export function TaskManager() {
                         >
                           {(selectedTask.priority || TaskPriority.MEDIUM) ===
                             TaskPriority.LOW && (
-                            <ChevronDown className="h-3.5 w-3.5" />
+                            <CircleChevronDown className="h-3.5 w-3.5" />
                           )}
                           {(selectedTask.priority || TaskPriority.MEDIUM) ===
                             TaskPriority.MEDIUM && (
-                            <ChevronUp className="h-3.5 w-3.5" />
+                            <CircleChevronUp className="h-3.5 w-3.5" />
                           )}
                           {[TaskPriority.HIGH, TaskPriority.URGENT].includes(
                             (selectedTask.priority ||
@@ -658,7 +644,7 @@ export function TaskManager() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className="h-4 w-4 text-gray-500" />
-                    <h3 className="text-sm font-medium">Descrição</h3>
+                    <h3 className="text-sm font-medium">Description</h3>
                   </div>
                   {isEditing ? (
                     <Textarea
@@ -669,14 +655,14 @@ export function TaskManager() {
                           description: e.target.value,
                         })
                       }
-                      placeholder="Adicione uma descrição..."
+                      placeholder="Add description..."
                       className="min-h-[100px]"
                     />
                   ) : (
                     <p className="text-sm text-gray-700 pl-6">
                       {selectedTask.description || (
                         <span className="text-gray-400 italic">
-                          Nenhuma descrição fornecida
+                          No description
                         </span>
                       )}
                     </p>
@@ -686,7 +672,7 @@ export function TaskManager() {
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <Calendar className="h-4 w-4 text-gray-500" />
-                    <h3 className="text-sm font-medium">Data de Vencimento</h3>
+                    <h3 className="text-sm font-medium">Due Date</h3>
                   </div>
                   {isEditing ? (
                     <Input
@@ -721,7 +707,7 @@ export function TaskManager() {
                     </p>
                   ) : (
                     <p className="text-sm text-gray-400 italic pl-6">
-                      Nenhuma data definida
+                      No due date
                     </p>
                   )}
                 </div>
@@ -779,7 +765,7 @@ export function TaskManager() {
                       className="gap-2"
                     >
                       <XIcon className="h-4 w-4" />
-                      <span>Cancelar</span>
+                      <span>Cancel</span>
                     </Button>
                     <Button
                       onClick={handleSaveEdit}
@@ -787,7 +773,7 @@ export function TaskManager() {
                       className="gap-2"
                     >
                       <Check className="h-4 w-4" />
-                      <span>Salvar alterações</span>
+                      <span>Save</span>
                     </Button>
                   </div>
                 ) : (
@@ -799,14 +785,14 @@ export function TaskManager() {
                         className="gap-2"
                       >
                         <Edit className="h-4 w-4" />
-                        <span>Editar</span>
+                        <span>Edit</span>
                       </Button>
                       <Button
                         variant="destructive"
                         onClick={async () => {
                           if (
                             window.confirm(
-                              "Tem certeza que deseja excluir esta tarefa?"
+                              "Are you sure you want to delete this task?"
                             )
                           ) {
                             await deleteTask(selectedTask.id);
@@ -816,7 +802,7 @@ export function TaskManager() {
                         className="gap-2"
                       >
                         <Trash2 className="h-4 w-4" />
-                        <span>Excluir</span>
+                        <span>Delete</span>
                       </Button>
                     </div>
                   </div>
@@ -830,5 +816,4 @@ export function TaskManager() {
   );
 }
 
-// Export as default for backward compatibility
 export default TaskManager;

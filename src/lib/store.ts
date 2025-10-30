@@ -67,7 +67,6 @@ export const useStore = create<TaskState>()(
       addTask: async (taskData: CreateTaskDTO) => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
           const newTask: Task = {
             ...taskData,
             id: Date.now().toString(),
@@ -109,7 +108,6 @@ export const useStore = create<TaskState>()(
       deleteTask: async (id: string) => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
 
           // Recursive function to get all descendant task IDs
           const getAllDescendantIds = (taskId: string): string[] => {
@@ -229,7 +227,6 @@ export const useStore = create<TaskState>()(
       addTag: async (tagData: CreateTagDTO) => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
           const newTag: Tag = {
             ...tagData,
             id: Date.now().toString(),
@@ -250,7 +247,6 @@ export const useStore = create<TaskState>()(
       updateTag: async (id: string, updates: Partial<UpdateTagDTO>) => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
 
           set((state) => ({
             tags: state.tags.map((tag) =>
@@ -268,7 +264,6 @@ export const useStore = create<TaskState>()(
       deleteTag: async (id: string) => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
 
           // Remove tag from any tasks that have it
           set((state) => ({
@@ -288,7 +283,6 @@ export const useStore = create<TaskState>()(
       login: async (email: string, password: string): Promise<boolean> => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
           // For demo purposes, we'll simulate a successful login
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -321,7 +315,6 @@ export const useStore = create<TaskState>()(
       ): Promise<boolean> => {
         try {
           set({ isLoading: true });
-          // In a real app, you would make an API call here
           await new Promise((resolve) => setTimeout(resolve, 1000));
 
           // Simulate successful registration and login
