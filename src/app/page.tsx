@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useStore } from "../lib/store";
-import { TaskStatus, TaskPriority, type Task } from "./interfaces";
+import { TaskStatus, TaskPriority, type Task } from "../lib/interfaces";
 import { Button } from "../components/ui/button";
 import {
   Card,
