@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useStore } from "./store";
+import { useStore } from "../lib/store";
 import { TaskStatus, TaskPriority, type Task } from "./interfaces";
 import { Button } from "../components/ui/button";
 import {
@@ -152,7 +152,7 @@ export function TaskManager() {
 
   const handleTaskClick = (task: TaskWithTags | null) => {
     if (!task) return;
-    
+
     setSelectedTask(task);
     setEditingTask({
       title: task.title,
@@ -195,7 +195,9 @@ export function TaskManager() {
       description: selectedTask.description || "",
       priority: selectedTask.priority || TaskPriority.MEDIUM,
       status: selectedTask.status,
-      dueDate: selectedTask.dueDate ? new Date(selectedTask.dueDate) : undefined,
+      dueDate: selectedTask.dueDate
+        ? new Date(selectedTask.dueDate)
+        : undefined,
     });
 
     setIsEditing(false);
@@ -203,20 +205,30 @@ export function TaskManager() {
 
   const renderTaskCard = (task: TaskWithTags) => {
     const priorityIcons = {
-      [TaskPriority.LOW]: <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />,
-      [TaskPriority.MEDIUM]: <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />,
-      [TaskPriority.HIGH]: <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />,
+      [TaskPriority.LOW]: (
+        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+      ),
+      [TaskPriority.MEDIUM]: (
+        <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
+      ),
+      [TaskPriority.HIGH]: (
+        <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
+      ),
       [TaskPriority.URGENT]: (
-        <AlertCircle className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true" />
+        <AlertCircle
+          className="h-3.5 w-3.5"
+          fill="currentColor"
+          aria-hidden="true"
+        />
       ),
     };
 
     const priority = task.priority || TaskPriority.MEDIUM;
     const priorityLabel = {
-      [TaskPriority.LOW]: 'Baixa',
-      [TaskPriority.MEDIUM]: 'Média',
-      [TaskPriority.HIGH]: 'Alta',
-      [TaskPriority.URGENT]: 'Urgente'
+      [TaskPriority.LOW]: "Baixa",
+      [TaskPriority.MEDIUM]: "Média",
+      [TaskPriority.HIGH]: "Alta",
+      [TaskPriority.URGENT]: "Urgente",
     }[priority];
 
     return (
@@ -224,11 +236,17 @@ export function TaskManager() {
         key={task.id}
         role="button"
         tabIndex={0}
-        aria-label={`Tarefa: ${task.title}, Prioridade: ${priorityLabel}${task.dueDate ? `, Vence em: ${new Date(task.dueDate).toLocaleDateString('pt-BR')}` : ''}`}
+        aria-label={`Tarefa: ${task.title}, Prioridade: ${priorityLabel}${
+          task.dueDate
+            ? `, Vence em: ${new Date(task.dueDate).toLocaleDateString(
+                "pt-BR"
+              )}`
+            : ""
+        }`}
         className="mb-3 cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-transparent hover:border-l-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
         onClick={() => handleTaskClick(task)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             handleTaskClick(task);
           }
@@ -284,7 +302,7 @@ export function TaskManager() {
   const renderStatusColumn = (status: TaskStatus, tasks: TaskWithTags[]) => {
     // Only render the count if we're on the client side
     const taskCount = mounted ? tasks.length : 0;
-    const statusId = `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
+    const statusId = `status-${status.toLowerCase().replace(/\s+/g, "-")}`;
 
     return (
       <section
@@ -297,11 +315,11 @@ export function TaskManager() {
             {statusLabels[status]}
           </h2>
           <span className="text-sm text-gray-500" aria-live="polite">
-            {taskCount} {taskCount === 1 ? 'tarefa' : 'tarefas'}
+            {taskCount} {taskCount === 1 ? "tarefa" : "tarefas"}
           </span>
         </div>
-        <div 
-          role="region" 
+        <div
+          role="region"
           aria-label={`Lista de tarefas ${statusLabels[status].toLowerCase()}`}
           className="space-y-2"
         >
@@ -327,16 +345,25 @@ export function TaskManager() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle id="add-task-dialog-title">Adicionar Nova Tarefa</DialogTitle>
+                <DialogTitle id="add-task-dialog-title">
+                  Adicionar Nova Tarefa
+                </DialogTitle>
                 <DialogDescription id="add-task-dialog-description">
                   Preencha os detalhes abaixo para criar uma nova tarefa.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 py-4" role="form" aria-labelledby="add-task-dialog-title" aria-describedby="add-task-dialog-description">
+              <div
+                className="space-y-4 py-4"
+                role="form"
+                aria-labelledby="add-task-dialog-title"
+                aria-describedby="add-task-dialog-description"
+              >
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Text className="h-4 w-4 text-muted-foreground" />
-                    <label htmlFor="task-title" className="text-sm font-medium">Título</label>
+                    <label htmlFor="task-title" className="text-sm font-medium">
+                      Título
+                    </label>
                   </div>
                   <Input
                     id="task-title"
@@ -351,7 +378,12 @@ export function TaskManager() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
-                    <label htmlFor="task-description" className="text-sm font-medium">Descrição</label>
+                    <label
+                      htmlFor="task-description"
+                      className="text-sm font-medium"
+                    >
+                      Descrição
+                    </label>
                   </div>
                   <Textarea
                     id="task-description"
@@ -366,7 +398,12 @@ export function TaskManager() {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                      <label id="priority-label" className="text-sm font-medium">Prioridade</label>
+                      <label
+                        id="priority-label"
+                        className="text-sm font-medium"
+                      >
+                        Prioridade
+                      </label>
                     </div>
                     <Select
                       value={newTask.priority}
@@ -394,7 +431,9 @@ export function TaskManager() {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <ListTodo className="h-4 w-4 text-muted-foreground" />
-                      <label id="status-label" className="text-sm font-medium">Status</label>
+                      <label id="status-label" className="text-sm font-medium">
+                        Status
+                      </label>
                     </div>
                     <Select
                       value={newTask.status}
@@ -465,9 +504,13 @@ export function TaskManager() {
             </DialogContent>
           </Dialog>
         </header>
-        
+
         <main>
-          <div className="flex flex-col md:flex-row gap-6" role="main" aria-labelledby="main-heading">
+          <div
+            className="flex flex-col md:flex-row gap-6"
+            role="main"
+            aria-labelledby="main-heading"
+          >
             {renderStatusColumn(TaskStatus.TODO, todoTasks)}
             {renderStatusColumn(TaskStatus.IN_PROGRESS, inProgressTasks)}
             {renderStatusColumn(TaskStatus.COMPLETED, completedTasks)}

@@ -12,7 +12,7 @@ import {
   UpdateTaskDTO,
   CreateTagDTO,
   UpdateTagDTO,
-} from "./interfaces";
+} from "../app/interfaces";
 
 interface TaskState {
   tasks: (Task & { tags?: Tag[] })[];
