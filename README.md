@@ -2,6 +2,10 @@
 
 Este projeto visa criar um dashboard de tarefas com funcionalidades básicas de gerenciamento com tags e logs.
 
+Neste README podem ser encontrados informações sobre a instalação e execução do projeto, incluindo o que foi feito e o que ainda precisa ser feito.
+
+Você pode ver o dashboard em ação no link: dashboard-tarefas-test.vercel.app
+
 ## Instalação
 
 Foi utlizado no desenvolvimento o Node.js v22.19.0.
